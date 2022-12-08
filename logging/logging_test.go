@@ -135,74 +135,76 @@ func TestString(t *testing.T) {
 
 // FATALレベルのログ試験(Skip)
 func TestFatal(t *testing.T) {
-	// /* 試験ケース */
-	// testCases := []struct {
-	// 	name string // 試験名称
-	// 	env  string // 試験コンディション
-	// 	want bool   // 期待値
-	// }{
-	// 	{
-	// 		name: "正常系(DEBUG)",
-	// 		env:  "DEBUG",
-	// 		want: true,
-	// 	},
-	// 	{
-	// 		name: "正常系(INFO)",
-	// 		env:  "INFO",
-	// 		want: true,
-	// 	},
-	// 	{
-	// 		name: "正常系(WARN)",
-	// 		env:  "WARN",
-	// 		want: true,
-	// 	},
-	// 	{
-	// 		name: "正常系(ERROR)",
-	// 		env:  "ERROR",
-	// 		want: true,
-	// 	},
-	// 	{
-	// 		name: "正常系(FATAL)",
-	// 		env:  "FATAL",
-	// 		want: true,
-	// 	},
-	// }
-	//
-	// tmpExit := os.Exit
-	// defer func() { os.Exit = tmpExit }()
-	//
-	// for _, tt := range testCases {
-	// 	t.Run(tt.name, func(t *testing.T) {
-	// 		// 環境変数の設定
-	// 		t.Setenv(ENV_LOG_LEVEL, tt.env)
-	//
-	// 		/* 出力先バッファを作成する */
-	// 		r, w, _ := os.Pipe()
-	//
-	// 		logger := NewLogger()
-	// 		logger.stdout.SetOutput(w)
-	// 		logger.stderr.SetOutput(w)
-	//
-	// 		logger.Fatal("msg")
-	// 		w.Close()
-	//
-	// 		/* 出力を読み込み */
-	// 		var buf bytes.Buffer
-	// 		_, err := buf.ReadFrom(r)
-	// 		if nil != err {
-	// 			t.Fail()
-	// 		}
-	//
-	// 		// 取得値
-	// 		msg := strings.TrimRight(buf.String(), "\n")
-	//
-	// 		// 全ての指定ログレベルに表示される
-	// 		if strings.Contains(msg, "FATAL") != tt.want {
-	// 			t.Errorf("Fatal() = %v, not contains \"FATAL\" want %v", msg, tt.want)
-	// 		}
-	// 	})
-	// }
-	//
+	/* 試験ケース */
+	testCases := []struct {
+		name string // 試験名称
+		env  string // 試験コンディション
+		want bool   // 期待値
+	}{
+		{
+			name: "正常系(DEBUG)",
+			env:  "DEBUG",
+			want: true,
+		},
+		{
+			name: "正常系(INFO)",
+			env:  "INFO",
+			want: true,
+		},
+		{
+			name: "正常系(WARN)",
+			env:  "WARN",
+			want: true,
+		},
+		{
+			name: "正常系(ERROR)",
+			env:  "ERROR",
+			want: true,
+		},
+		{
+			name: "正常系(FATAL)",
+			env:  "FATAL",
+			want: true,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			// 環境変数の設定
+			t.Setenv(ENV_LOG_LEVEL, tt.env)
+
+			/* 出力先バッファを作成する */
+			r, w, _ := os.Pipe()
+
+			logger := NewLogger()
+			logger.stderr.SetOutput(w)
+
+			defer func() {
+				recover()
+
+				w.Close()
+
+				/* 出力を読み込み */
+				var buf bytes.Buffer
+
+				_, err := buf.ReadFrom(r)
+				if nil != err {
+					t.Fail()
+				}
+
+				// 取得値
+				msg := strings.TrimRight(buf.String(), "\n")
+
+				// 全ての指定ログレベルに表示される
+				if strings.Contains(msg, "FATAL") != tt.want {
+					t.Errorf("Fatal() = %v, not contains \"FATAL\" want %v", msg, tt.want)
+				}
+			}()
+
+			logger.Fatal("msg")
+
+		})
+	}
 }
 
 // ERRORレベルのログ試験

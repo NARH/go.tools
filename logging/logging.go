@@ -115,9 +115,9 @@ func (l *logger) Fatal(format string, args ...interface{}) {
 		_, file, line, ok := runtime.Caller(1)
 		if ok {
 			caller := fmt.Sprintf("@%s:%d: ", file, line)
-			l.stderr.Fatalf(caller+format, args...)
+			l.stderr.Panicf(caller+format, args...)
 		} else {
-			l.stderr.Fatalf(format, args...)
+			l.stderr.Panicf(format, args...)
 		}
 	}
 }
