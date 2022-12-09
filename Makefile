@@ -1,4 +1,4 @@
-.PHONY: all main clean test cover lint
+.PHONY: all build build-% clean test test-% cover lint
 
 ### コマンドの定義
 GO          			:= go
@@ -14,6 +14,7 @@ GO_TOOL						:= $(GO) tool
 GO_COVER					:= $(GO_TOOL) cover 
 
 ### ターゲットパラメータ
+NAMES							:= logging registry
 MODULE_NAME				:= github.com/NARH/go.tools
 MAIN_DIR					:= $(MODULE_NAME)/...
 BUILD_DIR   			:= ./build
@@ -23,16 +24,25 @@ LINT_CONFIG				:= review_config.yml
 
 ### PHONY ターゲットのビルドルール
 
-all: clean test main
+all: clean test build
 
 clean:
 	rm -fr $(BUILD_DIR) $(COVERAGE_PROFILE)
-main:
-	$(GO_BUILD) -o $(BIN_FILE) $(MAIN_DIR)
-test:
-	$(GO_TEST) $(MAIN_DIR)
+
+build: $(addprefix build-, $(NAMES))
+
+build-%:
+	$(GO_BUILD) $(MODULE_NAME)/${@:build-%=%}
+
+test: $(addprefix test-, $(NAMES))
+
+test-%:
+	$(GO_TEST) $(MODULE_NAME)/${@:test-%=%}
+
 cover:
 	$(GO_TEST) $(MAIN_DIR) -covermode=count -coverprofile=$(COVERAGE_PROFILE)
 	$(GO_COVER) -func=$(COVERAGE_PROFILE)
+
 lint:
 	$(GOLINT) -c $(LINT_CONFIG)
+
