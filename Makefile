@@ -14,7 +14,8 @@ GO_TOOL						:= $(GO) tool
 GO_COVER					:= $(GO_TOOL) cover 
 
 ### ターゲットパラメータ
-MAIN_DIR					:= ./...
+MODULE_NAME				:= github.com/NARH/go.tools
+MAIN_DIR					:= $(MODULE_NAME)/...
 BUILD_DIR   			:= ./build
 COVERAGE_PROFILE	:= cover.prof
 BIN_FILE					:= $(BUILD_DIR)/sample

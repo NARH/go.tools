@@ -4,3 +4,5 @@ use (
 	.
 	./logging
 )
+
+replace github.com/NARH/go.tools/logging v0.0.1 => ./logging
