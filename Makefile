@@ -39,9 +39,11 @@ test: $(addprefix test-, $(NAMES))
 test-%:
 	$(GO_TEST) $(MODULE_NAME)/${@:test-%=%}
 
-cover:
-	$(GO_TEST) $(MAIN_DIR) -covermode=count -coverprofile=$(COVERAGE_PROFILE)
-	$(GO_COVER) -func=$(COVERAGE_PROFILE)
+cover: $(addprefix cover-, $(NAMES))
+
+cover-%:
+	$(GO_TEST) $(MODULE_NAME)/${@:cover-%=%} -covermode=count -coverprofile=${@:cover-%=%}-$(COVERAGE_PROFILE)
+	$(GO_COVER) -func=${@:cover-%=%}-$(COVERAGE_PROFILE)
 
 lint:
 	$(GOLINT) -c $(LINT_CONFIG)
