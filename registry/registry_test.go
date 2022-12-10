@@ -133,8 +133,8 @@ func TestNewRegistry(t *testing.T) {
 		}, {
 			name: "正常系(func追加)",
 			key:  "test_6",
-			data: f1,
-			want: map[string]interface{}{"test_6": f1},
+			data: &f1,
+			want: map[string]interface{}{"test_6": &f1},
 		}, {
 			name: "正常系(nil追加)",
 			key:  "test_7",
