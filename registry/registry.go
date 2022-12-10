@@ -103,7 +103,7 @@ func (r *registry) keyCheck(key string) {
 }
 
 // レジストリデータにKey=Valueを追加する
-func (r *registry) Append(key string, val *interface{}) {
+func (r *registry) Append(key string, val interface{}) {
 	// keyのチェック
 	r.keyCheck(key)
 
