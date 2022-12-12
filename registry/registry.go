@@ -77,7 +77,6 @@ func hiveCreate(uri string) *hive {
 
 	r := regexp.MustCompile(HIVE_PTN)
 
-	//if !strings.HasSuffix(uri, HIVE_NOT_END_WITH) || r.MatchString(uri) {
 	if r.MatchString(uri) {
 		return &hive{uri: uri}
 	}
@@ -109,7 +108,7 @@ func (r *registry) Append(key string, val interface{}) {
 
 	// Appendなので登録済みのKeyはエラー
 	if _, ok := r.data[key]; ok {
-		panic(fmt.Errorf("key [%s] is already registed.", key))
+		panic(fmt.Errorf("key [%s] is already registered.", key))
 	}
 
 	r.data[key] = val
@@ -132,7 +131,7 @@ func (r *registry) Get(key string) (result interface{}, err error) {
 	if val, ok := r.data[key]; ok {
 		return val, nil
 	} else {
-		return nil, fmt.Errorf("key [%s] is not registed.", key)
+		return nil, fmt.Errorf("key [%s] is not registered.", key)
 	}
 }
 

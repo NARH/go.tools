@@ -89,7 +89,6 @@ const WORD_SIZE_256 = "123456789012345678901234567890123456789012345678901234567
 
 // 新規レジストリデータを作成する試験 / レジストリデータを登録する試験
 func TestNewRegistry(t *testing.T) {
-
 	t.Run("インスタンス取得正常系試験", func(t *testing.T) {
 		registry := NewRegistry()
 		if nil == registry {
@@ -197,7 +196,7 @@ func TestNewRegistry(t *testing.T) {
 		defer func() {
 			e := recover()
 
-			msg := fmt.Errorf("key [foo] is already registed.")
+			msg := fmt.Errorf("key [foo] is already registered.")
 			if nil != e && e.(error).Error() != msg.Error() {
 				t.Errorf("registry.Add() = %v, but want %v", e, msg)
 				t.Fail()
@@ -230,10 +229,10 @@ func TestGet(t *testing.T) {
 		registry.Append("foo", "bar")
 
 		result, err := registry.Get("bar")
-		want := fmt.Errorf("key [%s] is not registed.", "bar")
+		want := fmt.Errorf("key [%s] is not registered.", "bar")
 
 		if nil == err {
-			t.Errorf("registry.Get() not registed key[%s], but got value[%v].", "bar", result)
+			t.Errorf("registry.Get() not registered key[%s], but got value[%v].", "bar", result)
 		} else if want.Error() != err.Error() {
 			t.Errorf("registry.Get() = %v, but want %v", err, want)
 		}
@@ -251,6 +250,10 @@ func TestGet(t *testing.T) {
 			t.Errorf("registry.Get() = %v, but want %v", err, want)
 		}
 	})
+}
+
+// レジストリデータにKeyに対応したValueを設定する試験
+func TestSet(t *testing.T) {
 }
 
 // レジストリパッケージ関数 Add() の試験
