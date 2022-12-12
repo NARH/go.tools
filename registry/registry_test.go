@@ -254,6 +254,80 @@ func TestGet(t *testing.T) {
 
 // レジストリデータにKeyに対応したValueを設定する試験
 func TestSet(t *testing.T) {
+	t.Run("正常系試験(未登録)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Set("foo", "bar")
+
+		val, err := registry.Get("foo")
+		if nil != err {
+			t.Fail()
+		}
+
+		result, ok := val.(string)
+		if !ok {
+			t.Fail()
+		}
+
+		if "bar" != result {
+			t.Errorf("registry.Set() = %v, but want %v", result, "bar")
+		}
+	})
+
+	t.Run("正常系試験(キー登録済み)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("foo", "bar")
+		registry.Set("foo", "hoge")
+
+		val, err := registry.Get("foo")
+		if nil != err {
+			t.Fail()
+		}
+
+		result, ok := val.(string)
+		if !ok {
+			t.Fail()
+		}
+
+		if "hoge" != result {
+			t.Errorf("registry.Set() = %v, but want %v", result, "hoge")
+		}
+	})
+}
+
+// レジストリデータのKey=Valueを削除する試験
+func TestRemove(t *testing.T) {
+	t.Run("正常系", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("foo", "bar")
+		err := registry.Remove("foo")
+		if nil != err {
+			t.Error(err)
+		}
+	})
+
+	t.Run("異常系(未登録のキー)", func(t *testing.T) {
+		registry := NewRegistry()
+		err := registry.Remove("foo")
+		want := fmt.Errorf("key [%s] is not registered.", "foo")
+
+		if nil == err {
+			t.Fail()
+		} else if want.Error() != err.Error() {
+			t.Errorf("registry.Remove() = %v, but want %v", err, want)
+		}
+	})
+
+	t.Run("異常系(キーサイズエラー)", func(t *testing.T) {
+		registry := NewRegistry()
+		err := registry.Remove(WORD_SIZE_256)
+		want := fmt.Errorf("Illegal key length. [%s:%d]", WORD_SIZE_256, len(WORD_SIZE_256))
+
+		if nil == err {
+			t.Fail()
+		} else if want.Error() != err.Error() {
+			t.Errorf("registry.Remove() = %v, but want %v", err, want)
+		}
+	})
 }
 
 // レジストリパッケージ関数 Add() の試験

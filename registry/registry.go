@@ -135,6 +135,35 @@ func (r *registry) Get(key string) (result interface{}, err error) {
 	}
 }
 
+// レジストリデータにKeyに対応したValueを設定する
+// 登録済みキーであってもエラーにならずに上書きする
+func (r *registry) Set(key string, val interface{}) {
+	r.keyCheck(key)
+	r.data[key] = val
+}
+
+// レジストリデータのKey=Valueを削除する
+func (r *registry) Remove(key string) (err error) {
+	defer func() {
+		// keyのチェック時にエラーとして返す
+		e := recover()
+		if nil != e {
+			if ee, ok := e.(error); ok {
+				err = ee
+			}
+		}
+	}()
+
+	r.keyCheck(key)
+
+	if _, ok := r.data[key]; ok {
+		delete(r.data, key)
+		return nil
+	} else {
+		return fmt.Errorf("key [%s] is not registered.", key)
+	}
+}
+
 // レジストリパッケージ関数 Add()
 // Registry.Add() のラッパー関数
 //
