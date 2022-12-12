@@ -92,12 +92,12 @@ func NewRegistry() *registry {
 }
 
 // レジストリデータ最大サイズ長(以下)
-const MAX_KEY_LENGTH = 256
+const MAX_KEY_LENGTH = 255
 
 // keyのチェック
 func (r *registry) keyCheck(key string) {
 	// Keyサイズチェック
-	if 1 > len(key) && MAX_KEY_LENGTH < len(key) {
+	if 1 > len(key) || MAX_KEY_LENGTH < len(key) {
 		panic(fmt.Errorf("Illegal key length. [%s:%d]", key, len(key)))
 	}
 }
@@ -116,24 +116,24 @@ func (r *registry) Append(key string, val interface{}) {
 }
 
 // レジストリデータからKeyに対応したValueを取得する
-func (r *registry) Get(key string) (*interface{}, error) {
-	// keyのチェック時にエラーとして返す
-	defer func() (*interface{}, error) {
+func (r *registry) Get(key string) (result interface{}, err error) {
+	defer func() {
+		// keyのチェック時にエラーとして返す
 		e := recover()
 		if nil != e {
 			if ee, ok := e.(error); ok {
-				return nil, ee
+				err = ee
 			}
 		}
-		panic(fmt.Errorf("UnExpcted key [%s]", key))
 	}()
 
 	r.keyCheck(key)
 
 	if val, ok := r.data[key]; ok {
-		return &val, nil
+		return val, nil
+	} else {
+		return nil, fmt.Errorf("key [%s] is not registed.", key)
 	}
-	return nil, fmt.Errorf("key [%s] is not registed.", key)
 }
 
 // レジストリパッケージ関数 Add()

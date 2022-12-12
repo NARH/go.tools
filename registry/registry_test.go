@@ -84,7 +84,10 @@ func TestHiveCreate(t *testing.T) {
 	}
 }
 
-// 新規レジストリデータを作成する
+// エラーとなるキーサイズ
+const WORD_SIZE_256 = "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456"
+
+// 新規レジストリデータを作成する試験 / レジストリデータを登録する試験
 func TestNewRegistry(t *testing.T) {
 
 	t.Run("インスタンス取得正常系試験", func(t *testing.T) {
@@ -104,6 +107,7 @@ func TestNewRegistry(t *testing.T) {
 		key  string
 		data interface{}
 		want map[string]interface{}
+		err  error
 	}{
 		{
 			name: "正常系(文字列追加)",
@@ -131,20 +135,55 @@ func TestNewRegistry(t *testing.T) {
 			data: []int{100, 200},
 			want: map[string]interface{}{"test_5": []int{100, 200}},
 		}, {
-			name: "正常系(func追加)",
+			name: "正常系(map追加)",
 			key:  "test_6",
+			data: map[string]int{"foo": 100, "bar": 200},
+			want: map[string]interface{}{"test_6": map[string]int{"foo": 100, "bar": 200.}},
+		}, {
+			name: "正常系(func追加)",
+			key:  "test_7",
 			data: &f1,
-			want: map[string]interface{}{"test_6": &f1},
+			want: map[string]interface{}{"test_7": &f1},
 		}, {
 			name: "正常系(nil追加)",
-			key:  "test_7",
+			key:  "test_8",
 			data: nil,
-			want: map[string]interface{}{"test_7": nil},
+			want: map[string]interface{}{"test_8": nil},
+		}, {
+			name: "正常系(nested array追加)",
+			key:  "test_9",
+			data: [2][2]string{{"foo", "bar"}, {"hoge", "fuga"}},
+			want: map[string]interface{}{"test_9": [2][2]string{{"foo", "bar"}, {"hoge", "fuga"}}},
+		}, {
+			name: "正常系(nested slice追加)",
+			key:  "test_10",
+			data: [][]string{{"foo", "bar"}, {"hoge", "fuga"}},
+			want: map[string]interface{}{"test_10": [][]string{{"foo", "bar"}, {"hoge", "fuga"}}},
+		}, {
+			name: "正常系(nested map追加)",
+			key:  "test_10",
+			data: map[string]map[int]int{"foo": {1: 10}, "bar": {2: 100}},
+			want: map[string]interface{}{"test_10": map[string]map[int]int{"foo": {1: 10}, "bar": {2: 100}}},
+		}, {
+			name: "異常系(キーサイズエラー)",
+			key:  WORD_SIZE_256,
+			data: "foo",
+			err:  fmt.Errorf("Illegal key length. [%s:%d]", WORD_SIZE_256, len(WORD_SIZE_256)),
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
+
+			defer func() {
+				e := recover()
+
+				if nil != e && e.(error).Error() != tt.err.Error() {
+					t.Errorf("registry.Add() = %v, but want %v", e, tt.err)
+					t.Fail()
+				}
+			}()
+
 			registry := NewRegistry()
 			registry.Append(tt.key, tt.data)
 			if !reflect.DeepEqual(registry.data, tt.want) {
@@ -153,6 +192,65 @@ func TestNewRegistry(t *testing.T) {
 			logging.NewLogger().Debug("%v", registry.data)
 		})
 	}
+
+	t.Run("異常系(キー重複)", func(t *testing.T) {
+		defer func() {
+			e := recover()
+
+			msg := fmt.Errorf("key [foo] is already registed.")
+			if nil != e && e.(error).Error() != msg.Error() {
+				t.Errorf("registry.Add() = %v, but want %v", e, msg)
+				t.Fail()
+			}
+		}()
+
+		registry := NewRegistry()
+		registry.Append("foo", "bar")
+		registry.Append("foo", "hoge")
+	})
+}
+
+// レジストリデータからKeyに対応したValueを取得する試験
+func TestGet(t *testing.T) {
+	t.Run("正常系試験", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("foo", "bar")
+
+		if result, err := registry.Get("foo"); nil == err {
+			if "bar" != result.(string) {
+				t.Errorf("regitry.Get() = %v, but want %v", result, "bar")
+			}
+		} else {
+			t.Errorf(err.Error())
+		}
+	})
+
+	t.Run("異常系試験(キーなし)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("foo", "bar")
+
+		result, err := registry.Get("bar")
+		want := fmt.Errorf("key [%s] is not registed.", "bar")
+
+		if nil == err {
+			t.Errorf("registry.Get() not registed key[%s], but got value[%v].", "bar", result)
+		} else if want.Error() != err.Error() {
+			t.Errorf("registry.Get() = %v, but want %v", err, want)
+		}
+	})
+
+	t.Run("異常系試験(キーサイズエラー)", func(t *testing.T) {
+		registry := NewRegistry()
+		_, err := registry.Get(WORD_SIZE_256)
+
+		want := fmt.Errorf("Illegal key length. [%s:%d]", WORD_SIZE_256, len(WORD_SIZE_256))
+
+		if nil == err {
+			t.Errorf("registry.Get() key length over, not errored.")
+		} else if want.Error() != err.Error() {
+			t.Errorf("registry.Get() = %v, but want %v", err, want)
+		}
+	})
 }
 
 // レジストリパッケージ関数 Add() の試験
