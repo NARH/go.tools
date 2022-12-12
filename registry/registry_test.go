@@ -332,12 +332,44 @@ func TestRemove(t *testing.T) {
 
 // レジストリパッケージ関数 Add() の試験
 func TestAdd(t *testing.T) {
-	t.Fail()
+	t.Run("正常系試験", func(t *testing.T) {
+		hive := "example.com/foo/bar"
+		registry := NewRegistry()
+		registry.Append("hoge", "fuga")
+		Add(hive, registry)
+
+		h := hiveCreate(hive)
+		result, ok := store.store[h]
+		want := map[string]interface{}{
+			"hoge": "fuga",
+		}
+
+		if !ok {
+			t.Errorf("hive [%v] not registerd", hive)
+		}
+
+		if !reflect.DeepEqual(result.data, want) {
+			t.Errorf("Add() = %v, but want %v", result.data, want)
+		}
+	})
 }
 
 // レジストリパッケージ関数 Lookup() の試験
 func TestLookup(t *testing.T) {
-	t.Fail()
+	t.Run("正常系試験(hive で検索)", func(t *testing.T) {
+		hive := "example.com/foo/bar"
+		registry := NewRegistry()
+		registry.Append("test_1", "value_1")
+		Add(hive, registry)
+
+		result, err := Lookup(hive)
+		if nil != err {
+			t.Errorf(err.Error())
+		} else {
+			log := logging.NewLogger()
+			log.Info("%v", result)
+		}
+	})
 }
 
 // レジストリパッケージ関数 Delete() の試験

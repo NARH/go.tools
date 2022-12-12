@@ -37,14 +37,19 @@ type registry struct {
 }
 
 // Registry Store レジストリの格納場所
-var store = map[hive]*registry{}
+var store *Store
+
+// Registry Store の構造体
+type Store struct {
+	store map[hive]registry
+}
 
 // レジストリの基本機能
 type Registry interface {
 	// レジストリの追加を行う
-	Add(h hive, r ...registry) error
+	Add(h hive, r registry)
 	// レジストリの検索を行う
-	Lookup(h hive, key ...string) (*[]registry, error)
+	Lookup(h hive, keys ...string) (*registry, error)
 	// レジストリの削除を行う
 	Delete(h hive, r ...registry) error
 }
@@ -69,7 +74,7 @@ const HIVE_PTN = `^[a-zA-z]([a-zA-Z0-9+\-.])*(:[0-9]+)?(\/[a-zA-z0-9_+\-.\/]*)*(
 const HIVE_NOT_END_WITH = `/`
 
 // hive を作成する
-func hiveCreate(uri string) *hive {
+func hiveCreate(uri string) hive {
 	// 長さ 0 は禁止は禁止
 	if 0 >= len(uri) {
 		panic(fmt.Errorf("hive name is empty."))
@@ -78,7 +83,7 @@ func hiveCreate(uri string) *hive {
 	r := regexp.MustCompile(HIVE_PTN)
 
 	if r.MatchString(uri) {
-		return &hive{uri: uri}
+		return hive{uri: uri}
 	}
 
 	// NGの場合はpanicでerrorを投げる
@@ -164,14 +169,67 @@ func (r *registry) Remove(key string) (err error) {
 	}
 }
 
+// レジストリストアにレジストリを追加する
+func (s *Store) Add(h hive, r *registry) {
+	s.store[h] = *r
+}
+
+func (s *Store) Lookup(h hive, keys ...string) (*registry, error) {
+	r, ok := s.store[h]
+
+	if !ok {
+		return nil, fmt.Errorf("No such hive [%v]", h)
+	}
+
+	// キー指定がある場合は対応するキーのみを返す
+	if 0 < len(keys) {
+		flg := false
+		rr := NewRegistry()
+
+		for idx := range keys {
+			key := keys[idx]
+			if val, ok := r.data[key]; ok {
+				rr.Append(key, val)
+				flg = true
+			}
+		}
+
+		if flg {
+			return rr, nil
+		} else {
+			// 指定した全てのキーが存在しない場合はエラー
+			return nil, fmt.Errorf("Not all keys exist. [%v]", keys)
+		}
+	} else {
+		// キー指定がない場合は全件を返す
+		return &r, nil
+	}
+}
+
+// 新規レジストリストアを取得する
+func newStore() *Store {
+	return &Store{
+		store: map[hive]registry{},
+	}
+}
+
+// 現在のレジストリストアを取得する
+// 未定義の場合は作成する
+func getStore() *Store {
+	if nil != store {
+		store = newStore()
+	}
+	return store
+}
+
 // レジストリパッケージ関数 Add()
 // Registry.Add() のラッパー関数
 //
 // ex:
 // registory.Add(h, r) のように使う
-func Add(h string, r ...registry) error {
-	err := fmt.Errorf("Add error")
-	return err
+func Add(h string, r *registry) {
+	hive := hiveCreate(h)
+	getStore().Add(hive, r)
 }
 
 // レジストリパッケージ関数 Lookup()
