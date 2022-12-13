@@ -31,6 +31,7 @@ func main() {
 	map2["func"] = f
 	comp = reflect.DeepEqual(map1, map2)
 	fmt.Printf("%v\n", comp)
+
 	f1 := map1["func"]
 	f2 := map2["func"]
 	fmt.Printf("f1 = %t, f2 = %t\n", f1, f2)
@@ -40,9 +41,11 @@ func main() {
 	map2["func"] = &f
 	comp = reflect.DeepEqual(map1, map2)
 	fmt.Printf("%v\n", comp)
+
 	f3 := map1["func"]
 	f4 := map2["func"]
 	fmt.Printf("f3 = %t, f4 = %t\n", *f3.(*func() int), *f4.(*func() int))
+
 	f5 := *f3.(*func() int)
 	f6 := *f4.(*func() int)
 	fmt.Printf("f5() = %v, f6() = %v\n", f5(), f6())

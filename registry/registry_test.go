@@ -12,6 +12,8 @@ import (
 	"github.com/NARH/go.tools/logging"
 )
 
+const SAMPLE_HIVE_NAME = "example.com/foo/bar"
+
 // hive を作成試験
 func TestHiveCreate(t *testing.T) {
 	/* 試験ケース */
@@ -333,19 +335,18 @@ func TestRemove(t *testing.T) {
 // レジストリパッケージ関数 Add() の試験
 func TestAdd(t *testing.T) {
 	t.Run("正常系試験", func(t *testing.T) {
-		hive := "example.com/foo/bar"
 		registry := NewRegistry()
 		registry.Append("hoge", "fuga")
-		Add(hive, registry)
+		Add(SAMPLE_HIVE_NAME, registry)
 
-		h := hiveCreate(hive)
+		h := hiveCreate(SAMPLE_HIVE_NAME)
 		result, ok := store.store[h]
 		want := map[string]interface{}{
 			"hoge": "fuga",
 		}
 
 		if !ok {
-			t.Errorf("hive [%v] not registerd", hive)
+			t.Errorf("hive [%v] not registered", SAMPLE_HIVE_NAME)
 		}
 
 		if !reflect.DeepEqual(result.data, want) {
@@ -356,18 +357,67 @@ func TestAdd(t *testing.T) {
 
 // レジストリパッケージ関数 Lookup() の試験
 func TestLookup(t *testing.T) {
+	log := logging.NewLogger()
+
 	t.Run("正常系試験(hive で検索)", func(t *testing.T) {
-		hive := "example.com/foo/bar"
 		registry := NewRegistry()
 		registry.Append("test_1", "value_1")
-		Add(hive, registry)
+		Add(SAMPLE_HIVE_NAME, registry)
 
-		result, err := Lookup(hive)
+		want := map[string]interface{}{"test_1": "value_1"}
+		result, err := Lookup(SAMPLE_HIVE_NAME)
 		if nil != err {
 			t.Errorf(err.Error())
-		} else {
-			log := logging.NewLogger()
-			log.Info("%v", result)
+		} else if !reflect.DeepEqual(result.data, want) {
+			t.Errorf("Lookup() = %v, but want %v", result.data, want)
+		}
+	})
+
+	t.Run("正常系試験(hiveと一つのキーで検索)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("test_1", "value_1")
+		registry.Append("test_2", "value_2")
+		Add(SAMPLE_HIVE_NAME, registry)
+
+		want := map[string]interface{}{"test_1": "value_1"}
+		result, err := Lookup(SAMPLE_HIVE_NAME, "test_1")
+		log.Info("%v", result)
+		if nil != err {
+			t.Errorf(err.Error())
+		} else if !reflect.DeepEqual(result.data, want) {
+			t.Errorf("Lookup() = %v, but want %v", result.data, want)
+		}
+	})
+
+	t.Run("異常系試験(hiveなし)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("test_1", "value_1")
+		Add(SAMPLE_HIVE_NAME, registry)
+
+		h := "example.com/hoge"
+		want := fmt.Errorf("No such hive [%v]", h)
+
+		_, err := Lookup(h)
+		if nil == err {
+			t.Errorf("Lookup() = %v, but want %v", nil, want)
+		} else if want.Error() != err.Error() {
+			t.Errorf("Lookup() = %v, but want %v", err, want)
+		}
+	})
+
+	t.Run("異常系試験(該当キーなし)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("test_1", "value_1")
+		Add(SAMPLE_HIVE_NAME, registry)
+
+		keys := [1]string{"test_99"}
+		want := fmt.Errorf("Not all keys exist. %v", keys)
+
+		_, err := Lookup(SAMPLE_HIVE_NAME, keys[0])
+		if nil == err {
+			t.Errorf("Lookup() = %v, but want %v", nil, want)
+		} else if want.Error() != err.Error() {
+			t.Errorf("Lookup() = %v, but want %v", err, want)
 		}
 	})
 }

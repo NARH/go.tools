@@ -36,14 +36,6 @@ type registry struct {
 	data map[string]interface{}
 }
 
-// Registry Store レジストリの格納場所
-var store *Store
-
-// Registry Store の構造体
-type Store struct {
-	store map[hive]registry
-}
-
 // レジストリの基本機能
 type Registry interface {
 	// レジストリの追加を行う
@@ -169,58 +161,8 @@ func (r *registry) Remove(key string) (err error) {
 	}
 }
 
-// レジストリストアにレジストリを追加する
-func (s *Store) Add(h hive, r *registry) {
-	s.store[h] = *r
-}
-
-func (s *Store) Lookup(h hive, keys ...string) (*registry, error) {
-	r, ok := s.store[h]
-
-	if !ok {
-		return nil, fmt.Errorf("No such hive [%v]", h)
-	}
-
-	// キー指定がある場合は対応するキーのみを返す
-	if 0 < len(keys) {
-		flg := false
-		rr := NewRegistry()
-
-		for idx := range keys {
-			key := keys[idx]
-			if val, ok := r.data[key]; ok {
-				rr.Append(key, val)
-				flg = true
-			}
-		}
-
-		if flg {
-			return rr, nil
-		} else {
-			// 指定した全てのキーが存在しない場合はエラー
-			return nil, fmt.Errorf("Not all keys exist. [%v]", keys)
-		}
-	} else {
-		// キー指定がない場合は全件を返す
-		return &r, nil
-	}
-}
-
-// 新規レジストリストアを取得する
-func newStore() *Store {
-	return &Store{
-		store: map[hive]registry{},
-	}
-}
-
-// 現在のレジストリストアを取得する
-// 未定義の場合は作成する
-func getStore() *Store {
-	if nil != store {
-		store = newStore()
-	}
-	return store
-}
+// Registry Store レジストリの格納場所
+var store *Store = NewStore()
 
 // レジストリパッケージ関数 Add()
 // Registry.Add() のラッパー関数
@@ -229,7 +171,7 @@ func getStore() *Store {
 // registory.Add(h, r) のように使う
 func Add(h string, r *registry) {
 	hive := hiveCreate(h)
-	getStore().Add(hive, r)
+	store.Add(hive, r)
 }
 
 // レジストリパッケージ関数 Lookup()
@@ -237,9 +179,9 @@ func Add(h string, r *registry) {
 //
 // ex:
 // registry.Lookup(r, s) のように使う
-func Lookup(h string, key ...string) (*[]registry, error) {
-	err := fmt.Errorf("Lookup error")
-	return nil, err
+func Lookup(h string, keys ...string) (*registry, error) {
+	hive := hiveCreate(h)
+	return store.Lookup(hive, keys...)
 }
 
 // レジストリパッケージ関数 Delete()
