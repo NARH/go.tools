@@ -43,7 +43,7 @@ type Registry interface {
 	// レジストリの検索を行う
 	Lookup(h hive, keys ...string) (*registry, error)
 	// レジストリの削除を行う
-	Delete(h hive, r ...registry) error
+	Delete(h hive, keys ...string) error
 }
 
 // hive の Stringer method
@@ -189,7 +189,7 @@ func Lookup(h string, keys ...string) (*registry, error) {
 //
 // ex:
 // registry.Delete() のように使う
-func Delete(h string, r ...registry) error {
-	err := fmt.Errorf("Delete error")
-	return err
+func Delete(h string, keys ...string) error {
+	hive := hiveCreate(h)
+	return store.Delete(hive, keys...)
 }

@@ -58,3 +58,33 @@ func (s *Store) Lookup(h hive, keys ...string) (*registry, error) {
 		return &r, nil
 	}
 }
+
+// レジストリストアからレジストリを削除する
+func (s *Store) Delete(h hive, keys ...string) error {
+	r, ok := s.store[h]
+	if !ok {
+		return fmt.Errorf("No such hive [%v]", h.string())
+	}
+
+	if 0 < len(keys) {
+		flg := false
+
+		for _, key := range keys {
+			if _, ok := r.data[key]; ok {
+				delete(r.data, key)
+				flg = true
+			}
+		}
+
+		if flg {
+			return nil
+		} else {
+			// 指定した全てのキーが存在しない場合はエラー
+			return fmt.Errorf("Not all keys exist. %v", keys)
+		}
+	} else {
+		// キー指定がない場合はhive を消す
+		delete(s.store, h)
+		return nil
+	}
+}

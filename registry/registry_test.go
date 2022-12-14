@@ -14,6 +14,8 @@ import (
 
 const SAMPLE_HIVE_NAME = "example.com/foo/bar"
 
+var log = logging.NewLogger()
+
 // hive を作成試験
 func TestHiveCreate(t *testing.T) {
 	/* 試験ケース */
@@ -190,7 +192,7 @@ func TestNewRegistry(t *testing.T) {
 			if !reflect.DeepEqual(registry.data, tt.want) {
 				t.Errorf("registry.Append() = %v, but want %v", registry.data, tt.want)
 			}
-			logging.NewLogger().Debug("%v", registry.data)
+			log.Debug("%v", registry.data)
 		})
 	}
 
@@ -357,7 +359,6 @@ func TestAdd(t *testing.T) {
 
 // レジストリパッケージ関数 Lookup() の試験
 func TestLookup(t *testing.T) {
-	log := logging.NewLogger()
 
 	t.Run("正常系試験(hive で検索)", func(t *testing.T) {
 		registry := NewRegistry()
@@ -424,5 +425,70 @@ func TestLookup(t *testing.T) {
 
 // レジストリパッケージ関数 Delete() の試験
 func TestDelete(t *testing.T) {
-	t.Fail()
+	t.Run("正常系試験(hiveを消す)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("test_1", "value_1")
+		Add(SAMPLE_HIVE_NAME, registry)
+
+		if err := Delete(SAMPLE_HIVE_NAME); nil != err {
+			t.Errorf("Delete() = %v, but want %v", err, nil)
+		}
+
+		want := fmt.Errorf("No such hive [%v]", SAMPLE_HIVE_NAME)
+		if _, err := Lookup(SAMPLE_HIVE_NAME); want.Error() != err.Error() {
+			t.Errorf("Lookup() = %v, but want %v", err, want)
+		}
+	})
+
+	t.Run("正常系試験(keyを指定して消す)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("test_1", "value_1")
+		registry.Append("test_2", "value_2")
+		Add(SAMPLE_HIVE_NAME, registry)
+
+		if err := Delete(SAMPLE_HIVE_NAME, "test_1"); nil != err {
+			t.Errorf("Delete() = %v, but want %v", err, nil)
+		}
+
+		// 消えた事の確認
+		keys := [1]string{"test_1"}
+		want := fmt.Errorf("Not all keys exist. %v", keys)
+
+		_, err := Lookup(SAMPLE_HIVE_NAME, "test_1")
+		if want.Error() != err.Error() {
+			t.Errorf("Lookup() = %v, but want %v", err, want)
+		}
+
+		// 消えていない事の確認
+		r, err := Lookup(SAMPLE_HIVE_NAME, "test_2")
+		if nil != err {
+			t.Errorf("Lookup() = %v, but want %v", err, nil)
+		}
+
+		if _, ok := r.data["test_2"]; !ok {
+			t.Errorf("Delete() deleted [%s]", "test_2")
+		}
+
+		log.Debug("%v", r.data)
+	})
+
+	t.Run("異常系試験(hiveなし)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("test_1", "value_1")
+		Add(SAMPLE_HIVE_NAME, registry)
+
+		want := fmt.Errorf("No such hive [%v]", "example.com/hoge")
+		if err := Delete("example.com/hoge"); want.Error() != err.Error() {
+			t.Errorf("Delete() = %v, but want %v", err, want)
+		}
+
+		r, err := Lookup(SAMPLE_HIVE_NAME)
+		if nil != err {
+			t.Errorf("Delete() deleted [%s]", SAMPLE_HIVE_NAME)
+		}
+		if 1 != len(r.data) {
+			t.Errorf("Delete() = %v, but want %v", len(r.data), 1)
+		}
+		log.Debug("%v", r)
+	})
 }
