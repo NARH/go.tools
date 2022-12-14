@@ -72,6 +72,7 @@ func (s *Store) Delete(h hive, keys ...string) error {
 		for _, key := range keys {
 			if _, ok := r.data[key]; ok {
 				delete(r.data, key)
+
 				flg = true
 			}
 		}

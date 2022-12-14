@@ -359,7 +359,6 @@ func TestAdd(t *testing.T) {
 
 // レジストリパッケージ関数 Lookup() の試験
 func TestLookup(t *testing.T) {
-
 	t.Run("正常系試験(hive で検索)", func(t *testing.T) {
 		registry := NewRegistry()
 		registry.Append("test_1", "value_1")
