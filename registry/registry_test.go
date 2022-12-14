@@ -411,13 +411,11 @@ func TestLookup(t *testing.T) {
 		registry.Append("test_1", "value_1")
 		Add(SAMPLE_HIVE_NAME, registry)
 
-		keys := [1]string{"test_99"}
+		keys := []string{"test_99"}
 		want := fmt.Errorf("Not all keys exist. %v", keys)
 
-		_, err := Lookup(SAMPLE_HIVE_NAME, keys[0])
-		if nil == err {
-			t.Errorf("Lookup() = %v, but want %v", nil, want)
-		} else if want.Error() != err.Error() {
+		_, err := Lookup(SAMPLE_HIVE_NAME, keys...)
+		if want.Error() != err.Error() {
 			t.Errorf("Lookup() = %v, but want %v", err, want)
 		}
 	})
@@ -490,5 +488,26 @@ func TestDelete(t *testing.T) {
 			t.Errorf("Delete() = %v, but want %v", len(r.data), 1)
 		}
 		log.Debug("%v", r)
+	})
+
+	t.Run("異常系試験(該当キーなし)", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("test_1", "value_1")
+		Add(SAMPLE_HIVE_NAME, registry)
+
+		keys := []string{"test_99"}
+		want := fmt.Errorf("Not all keys exist. %v", keys)
+
+		if err := Delete(SAMPLE_HIVE_NAME, keys...); want.Error() != err.Error() {
+			t.Errorf("Delete() = %v, but want %v", err, want)
+		}
+
+		r, err := Lookup(SAMPLE_HIVE_NAME, "test_1")
+		if nil != err {
+			t.Errorf("Delete() deleted [%v]", "test_1")
+		}
+		if 1 != len(r.data) {
+			t.Errorf("Delete() = %v, but want %v", len(r.data), 1)
+		}
 	})
 }
