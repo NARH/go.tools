@@ -21,7 +21,7 @@ linters:
     - bodyclose
     - depguard
     - dogsled
-    - gochecknoglobals
+    # - gochecknoglobals
     - gochecknoinits
     - goconst
     - gocritic

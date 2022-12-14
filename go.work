@@ -3,6 +3,9 @@ go 1.19
 use (
 	.
 	./logging
+	./registry
 )
 
 replace github.com/NARH/go.tools/logging v0.0.1 => ./logging
+
+replace github.com/NARH/go.tools/registry v0.0.1 => ./registry
