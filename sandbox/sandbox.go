@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/pelletier/go-toml/v2"
 )
 
 func main() {
@@ -56,15 +58,18 @@ func main() {
 		IntVal:  999,
 		StrVal:  "foo",
 		BoolVal: false,
-		listVal: []string{"foo", "bar", "hoge", "fuga"},
+		ListVal: []string{"foo", "bar", "hoge", "fuga"},
+		MapVal:  map[string]interface{}{},
 	}
+	valueSection.MapVal["data"] = map[string]interface{}{"foo": "bar", "hoge": 99}
 
 	root := &Root{Value: *valueSection}
 
-	result, err := Marshal(root)
+	serialized, err := toml.Marshal(root)
 	if nil != err {
 		fmt.Printf("%v", err)
 	} else {
+		result := string(serialized)
 		fmt.Printf("%v", result)
 
 		defer func() {
@@ -76,8 +81,12 @@ func main() {
 
 		fmt.Println("=== toml UnMershal() ===")
 
-		root := UnMarshal(result)
-		fmt.Printf("%v\n", root)
+		var v interface{}
+		err := toml.Unmarshal([]byte(result), &v)
+		if nil != err {
+			panic(err)
+		}
+		fmt.Printf("%v\n", v)
 	}
 }
 
@@ -86,8 +95,9 @@ type Root struct {
 }
 
 type ValueSection struct {
-	IntVal  int      `toml:"intVal"`  // 数値
-	StrVal  string   `toml:"strVal"`  // 文字列
-	BoolVal bool     `toml:"bool"`    // 論理値
-	listVal []string `toml:"listVal"` // リスト
+	IntVal  int                    `toml:"val_1"`                        // 数値
+	StrVal  string                 `toml:"val_2"`                        // 文字列
+	BoolVal bool                   `toml:"val_3"`                        // 論理値
+	ListVal []string               `toml:"val_4, multiline, omitempty"`  // リスト
+	MapVal  map[string]interface{} `toml:"mapVal", multiline, omitempty` // map
 }
