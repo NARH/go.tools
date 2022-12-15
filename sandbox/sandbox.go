@@ -49,4 +49,45 @@ func main() {
 	f5 := *f3.(*func() int)
 	f6 := *f4.(*func() int)
 	fmt.Printf("f5() = %v, f6() = %v\n", f5(), f6())
+
+	fmt.Println("=== toml Mershal() ===")
+
+	var valueSection = &ValueSection{
+		IntVal:  999,
+		StrVal:  "foo",
+		BoolVal: false,
+		listVal: []string{"foo", "bar", "hoge", "fuga"},
+	}
+
+	root := &Root{Value: *valueSection}
+
+	result, err := Marshal(root)
+	if nil != err {
+		fmt.Printf("%v", err)
+	} else {
+		fmt.Printf("%v", result)
+
+		defer func() {
+			e := recover()
+			if nil != e {
+				fmt.Printf("%v\n", e)
+			}
+		}()
+
+		fmt.Println("=== toml UnMershal() ===")
+
+		root := UnMarshal(result)
+		fmt.Printf("%v\n", root)
+	}
+}
+
+type Root struct {
+	Value ValueSection `toml:"STRUCT_VALUES"`
+}
+
+type ValueSection struct {
+	IntVal  int      `toml:"intVal"`  // 数値
+	StrVal  string   `toml:"strVal"`  // 文字列
+	BoolVal bool     `toml:"bool"`    // 論理値
+	listVal []string `toml:"listVal"` // リスト
 }

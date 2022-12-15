@@ -9,6 +9,8 @@ package registry
 
 import (
 	"fmt"
+
+	"github.com/c2fo/vfs/v6/vfssimple"
 )
 
 // レジストリの基本機能
@@ -104,4 +106,10 @@ func (s *Store) Delete(h hive, keys ...string) error {
 		delete(s.store, h)
 		return nil
 	}
+}
+
+// レジストリを保存する
+func (s *Store) Store(f string) error {
+	_, err := vfssimple.NewFile(f)
+	return fmt.Errorf("Store() error. %v", err)
 }
