@@ -9,8 +9,11 @@ package registry
 
 import (
 	"fmt"
+	"sort"
 
+	"github.com/NARH/go.tools/logging"
 	"github.com/c2fo/vfs/v6/vfssimple"
+	"github.com/pelletier/go-toml/v2"
 )
 
 // レジストリの基本機能
@@ -111,5 +114,47 @@ func (s *Store) Delete(h hive, keys ...string) error {
 // レジストリを保存する
 func (s *Store) Store(f string) error {
 	_, err := vfssimple.NewFile(f)
+
+	toml, err := s.ToToml()
+	if nil != err {
+		return err
+	}
+
+	logging.NewLogger().Info(">>>\n%s", toml)
 	return fmt.Errorf("Store() error. %v", err)
+}
+
+func (s *Store) ToToml() (string, error) {
+	root := map[string]map[string]interface{}{}
+
+	var hives []hive
+	for k := range s.store {
+		hives = append(hives, k)
+	}
+	sort.Slice(hives, func(i, j int) bool {
+		return hives[i].string() < hives[j].string()
+	})
+
+	for _, k := range hives {
+		if _, ok := root[k.string()]; !ok {
+			root[k.string()] = make(map[string]interface{})
+		}
+		var keys []string
+		for kk := range s.store[k].data {
+			keys = append(keys, kk)
+		}
+		sort.Slice(keys, func(i, j int) bool {
+			return keys[i] < keys[j]
+		})
+		for _, kk := range keys {
+			root[k.string()][kk] = s.store[k].data[kk]
+		}
+	}
+
+	logging.NewLogger().Info(">>> %v", root)
+	toml, err := toml.Marshal(&root)
+	if nil != err {
+		return "", err
+	}
+	return string(toml), nil
 }

@@ -183,3 +183,10 @@ func Delete(h string, keys ...string) error {
 	hive := hiveCreate(h)
 	return store.Delete(hive, keys...)
 }
+
+func Save(f string) {
+	err := store.Store(f)
+	if nil != err {
+		panic(err)
+	}
+}

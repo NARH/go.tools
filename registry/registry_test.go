@@ -510,3 +510,24 @@ func TestDelete(t *testing.T) {
 		}
 	})
 }
+
+func TestSave(t *testing.T) {
+	t.Run("正常系試験", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Append("str", "value_1")
+		registry.Append("int", 99)
+		registry.Append("bool", true)
+		registry.Append("ary", []string{"foo", "bar"})
+		registry.Append("nil", nil)
+		Add(SAMPLE_HIVE_NAME, registry)
+
+		defer func() {
+			e := recover()
+			if nil != e {
+				t.Errorf("error %v", e)
+			}
+		}()
+
+		Save("file:/tmp/test.toml")
+	})
+}
