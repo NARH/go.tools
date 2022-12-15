@@ -36,16 +36,6 @@ type registry struct {
 	data map[string]interface{}
 }
 
-// レジストリの基本機能
-type Registry interface {
-	// レジストリの追加を行う
-	Add(h hive, r registry)
-	// レジストリの検索を行う
-	Lookup(h hive, keys ...string) (*registry, error)
-	// レジストリの削除を行う
-	Delete(h hive, keys ...string) error
-}
-
 // hive の Stringer method
 func (h *hive) string() string {
 	return h.uri

@@ -7,7 +7,23 @@
 */
 package registry
 
-import "fmt"
+import (
+	"fmt"
+)
+
+// レジストリの基本機能
+type Registry interface {
+	// レジストリの追加を行う
+	Add(h hive, r registry)
+	// レジストリの検索を行う
+	Lookup(h hive, keys ...string) (*registry, error)
+	// レジストリの削除を行う
+	Delete(h hive, keys ...string) error
+	// レジストリを保存する
+	Store(f string) error
+	// レジストリを復元する
+	Restore(f string) error
+}
 
 // Registry Store の構造体
 type Store struct {
