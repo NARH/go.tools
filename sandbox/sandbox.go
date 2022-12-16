@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/pelletier/go-toml/v2"
 )
+
+const DATE_TIME_FORMAT = "20060102150405"
 
 func main() {
 	f := func() int { return 100 }
@@ -88,6 +91,16 @@ func main() {
 		}
 		fmt.Printf("%v\n", v)
 	}
+
+	fmt.Println("=== string Concat() ===")
+	s1 := "あいうえお"
+	s2 := "かきくけこ"
+	r1 := Concat(s1, s2)
+	fmt.Printf(">>> %s\n", r1)
+
+	fmt.Println("=== Date Format ===")
+	d1 := time.Now()
+	fmt.Printf(d1.Format(DATE_TIME_FORMAT))
 }
 
 type Root struct {

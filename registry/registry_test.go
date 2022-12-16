@@ -6,6 +6,8 @@ package registry
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -528,6 +530,8 @@ func TestSave(t *testing.T) {
 			}
 		}()
 
-		Save("file:/tmp/test.toml")
+		f := filepath.Join("file:", os.TempDir(), "test.toml")
+		logging.NewLogger().Info(">>> out of toml [%s]", f)
+		Save(f)
 	})
 }

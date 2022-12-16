@@ -10,8 +10,8 @@ package registry
 import (
 	"fmt"
 	"sort"
+	"time"
 
-	"github.com/NARH/go.tools/logging"
 	"github.com/c2fo/vfs/v6/vfssimple"
 	"github.com/pelletier/go-toml/v2"
 )
@@ -113,24 +113,51 @@ func (s *Store) Delete(h hive, keys ...string) error {
 
 // レジストリを保存する
 func (s *Store) Store(f string) error {
-	_, err := vfssimple.NewFile(f)
+	file, err := vfssimple.NewFile(f)
+	if nil != err {
+		return err
+	}
+
+	back, err := vfssimple.NewFile(s.Concat(f, time.Now().Format(".20060102150405")))
+	if nil != err {
+		return err
+	}
 
 	toml, err := s.ToToml()
 	if nil != err {
 		return err
 	}
 
-	logging.NewLogger().Info(">>>\n%s", toml)
+	file.Write([]byte(toml))
+
+	if err := file.CopyToFile(back); nil != err {
+		return err
+	}
+
+	file.Close()
+
 	return fmt.Errorf("Store() error. %v", err)
+}
+
+func (s *Store) Concat(s1, s2 string) string {
+	c := len([]byte(s1))
+	c += len([]byte(s2))
+	ss := make([]byte, 0, c)
+	ss = append(ss, s1...)
+	ss = append(ss, s2...)
+
+	return string(ss)
 }
 
 func (s *Store) ToToml() (string, error) {
 	root := map[string]map[string]interface{}{}
 
-	var hives []hive
+	// mapのキーサイズは検討が付かないので適当な capacityを当てる
+	hives := make([]hive, 0, 1000)
 	for k := range s.store {
 		hives = append(hives, k)
 	}
+
 	sort.Slice(hives, func(i, j int) bool {
 		return hives[i].string() < hives[j].string()
 	})
@@ -139,22 +166,25 @@ func (s *Store) ToToml() (string, error) {
 		if _, ok := root[k.string()]; !ok {
 			root[k.string()] = make(map[string]interface{})
 		}
+
 		var keys []string
 		for kk := range s.store[k].data {
 			keys = append(keys, kk)
 		}
+
 		sort.Slice(keys, func(i, j int) bool {
 			return keys[i] < keys[j]
 		})
+
 		for _, kk := range keys {
 			root[k.string()][kk] = s.store[k].data[kk]
 		}
 	}
 
-	logging.NewLogger().Info(">>> %v", root)
 	toml, err := toml.Marshal(&root)
 	if nil != err {
 		return "", err
 	}
+
 	return string(toml), nil
 }
