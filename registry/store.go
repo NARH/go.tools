@@ -12,6 +12,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/NARH/go.tools/logging"
 	"github.com/c2fo/vfs/v6/vfssimple"
 	"github.com/pelletier/go-toml/v2"
 )
@@ -128,15 +129,46 @@ func (s *Store) Store(f string) error {
 		return err
 	}
 
-	file.Write([]byte(toml))
-
-	if err := file.CopyToFile(back); nil != err {
+	_, err = file.Write([]byte(toml))
+	if nil != err {
 		return err
 	}
 
 	file.Close()
 
-	return fmt.Errorf("Store() error. %v", err)
+	if err := file.CopyToFile(back); nil != err {
+		return err
+	}
+
+	return nil
+}
+
+// レジストリを復元する
+func (s *Store) Restore(f string) error {
+	file, err := vfssimple.NewFile(f)
+	if nil != err {
+		return err
+	}
+
+	ok, err := file.Exists()
+	if nil != err {
+		return err
+	}
+
+	if !ok {
+		return fmt.Errorf("toml file [%s] not exists.", f)
+	} else {
+
+		buf := make([]byte, 1000)
+		n, err := file.Read(buf)
+		if nil != err {
+			return fmt.Errorf("cannot read toml file [%s].", f)
+		}
+
+		str := string(buf[:n])
+		logging.NewLogger().Info(">>> \n%s", str)
+		return s.FromToml(str)
+	}
 }
 
 func (s *Store) Concat(s1, s2 string) string {
@@ -187,4 +219,17 @@ func (s *Store) ToToml() (string, error) {
 	}
 
 	return string(toml), nil
+}
+
+func (s *Store) FromToml(t string) error {
+	var root map[string]map[string]interface{}
+
+	err := toml.Unmarshal([]byte(t), &root)
+	if nil != err {
+		return err
+	}
+
+	logging.NewLogger().Info(">>> \n%v", root)
+
+	return nil
 }

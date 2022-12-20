@@ -2,11 +2,9 @@ module github.com/NARH/go.tools/registry
 
 go 1.19
 
-require github.com/NARH/go.tools/logging v0.0.0-20221209021656-158feb02189a
-
 require (
-	github.com/devlights/gomy v0.5.7 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+	github.com/NARH/go.tools/logging v0.0.0-20221209021656-158feb02189a
+	github.com/pelletier/go-toml/v2 v2.0.6
 )
 
 require (

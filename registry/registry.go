@@ -190,3 +190,10 @@ func Save(f string) {
 		panic(err)
 	}
 }
+
+func Restore(f string) {
+	err := store.Restore(f)
+	if nil != err {
+		panic(err)
+	}
+}

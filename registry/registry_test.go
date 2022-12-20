@@ -533,5 +533,7 @@ func TestSave(t *testing.T) {
 		f := filepath.Join("file:", os.TempDir(), "test.toml")
 		logging.NewLogger().Info(">>> out of toml [%s]", f)
 		Save(f)
+
+		Restore(f)
 	})
 }
