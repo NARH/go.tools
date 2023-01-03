@@ -535,5 +535,23 @@ func TestSave(t *testing.T) {
 		Save(f)
 
 		Restore(f)
+		r, err := Lookup(SAMPLE_HIVE_NAME)
+		logging.NewLogger().Info(">>> restored from toml %v", r)
+		if nil != err {
+			t.Errorf(err.Error())
+		}
+		if v, _ := r.Get("str"); "value_1" != v.(string) {
+			t.Errorf("Restored value %s = %v, but want %v", "str", "value_1", v)
+		}
+		if v, _ := r.Get("int"); 99 != v.(int) {
+			t.Errorf("Restored value %s = %v, but want %v", "int", 99, v)
+		}
+		if v, _ := r.Get("bool"); true != v.(bool) {
+			t.Errorf("Restored value %s = %v, but want %v", "bool", true, v)
+		}
+		if v, _ := r.Get("ary"); !reflect.DeepEqual([]string{"foo", "bar"}, v) {
+			t.Errorf("Restored value %s = %v, but want %v", "ary", []string{"foo", "bar"}, v)
+		}
+		logging.NewLogger().Info(">>> %v", reflect.DeepEqual(r, registry))
 	})
 }
